@@ -194,7 +194,7 @@ class _SettingsState extends State<Settings> {
                                   height: width * 0.3,
                                   child: ClipRRect(
                                     borderRadius: BorderRadius.circular(20),
-                                    child: model?.image==null?Center(
+                                    child: model?.image.toString()!=null?Center(
                                       child: Container(
                                         decoration: BoxDecoration(
                                             borderRadius: BorderRadius.circular(10),
@@ -207,7 +207,7 @@ class _SettingsState extends State<Settings> {
                                       ),
                                     ):Image(
                                       image: NetworkImage(
-                                          'https://pyxis.nymag.com/v1/imgs/e48/209/63cbdefa481d2e12651381284a2b590d9a-wandavision.rsquare.w700.jpg'),
+                                          model!.image.toString()),
                                       fit: BoxFit.cover,
                                     ),
                                   ),
@@ -378,7 +378,7 @@ class _SettingsState extends State<Settings> {
   }
 
   Future getprofile(String? tok) async {
-    Functions().showLoaderDialog(context);
+   // Functions().showLoaderDialog(context);
     String url = Constants.url + 'Profile/GetProfile';
     final response = await https.get(Uri.parse(url),
       headers: {"Content-Type": "application/json",
@@ -386,13 +386,13 @@ class _SettingsState extends State<Settings> {
       },
     );
 
-    Navigator.pop(context);
+
     if(response.statusCode==200){
       var result=jsonDecode(response.body)['res'];
       print(result);
       setState(() {
         model=Res.fromJson(result);
-        print(model?.name);
+
         Ahs=model?.name;
        if(Ahs.toString().isNotEmpty) {getname();}
        else{

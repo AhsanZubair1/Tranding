@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:dio/dio.dart';
 import 'package:email_validator/email_validator.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -10,13 +11,14 @@ import 'package:image_picker/image_picker.dart';
 import 'package:trade_watch/Extras/Constants.dart';
 import 'package:trade_watch/Extras/CustomColors.dart';
 import 'package:country_code_picker/country_code_picker.dart';
+import 'package:trade_watch/Extras/functions.dart';
 import 'package:trade_watch/Model/Profile.dart';
 import 'package:trade_watch/Screens/Dashboard/Settings.dart';
 import 'package:trade_watch/Widgets/MainButton.dart';
 import 'package:http/http.dart'as https;
 class BottomSheat extends StatefulWidget {
  final Res? model;
- final String header;
+ final String? header;
  BottomSheat({ this.model,required this.header});
 
 
@@ -37,6 +39,7 @@ class _BottomSheatState extends State<BottomSheat> {
 
   var rc = TextEditingController();
   List<String> phone = [];
+  bool hit=false;
 
   late double height ,width;
   bool validate(){
@@ -175,7 +178,7 @@ class _BottomSheatState extends State<BottomSheat> {
                 decoration: InputDecoration(
                     border: InputBorder.none,
 
-                    hintText: nc.text.toString()==""?'name':widget.model!.name.toString(),
+                    hintText: nc.text.toString()==""?'name':widget.model?.name.toString(),
                     hintStyle: TextStyle(
                         fontFamily: 'pr',
                         color: CColors.gray
@@ -240,8 +243,8 @@ class _BottomSheatState extends State<BottomSheat> {
                   child: CountryCodePicker(
                     initialSelection: phone.length == 2 ? phone[0] : country,
                     onChanged: (val){
-                      code = val.dialCode!;
-                      country = val.name!;
+                      code = val.dialCode??'0';
+                      country = val.name??'pk';
 
                       print(code);
                       print(country);
@@ -296,6 +299,10 @@ class _BottomSheatState extends State<BottomSheat> {
                   'country':country,
                 };
                submit();
+               hit=true;
+               if(hit==true){
+                 Functions().showLoaderDialog(context);
+               }
 
               }
 
@@ -311,7 +318,7 @@ class _BottomSheatState extends State<BottomSheat> {
   }
   Future<void> submit()async{
 
-    String tokenn=widget.header;
+    String tokenn=widget.header.toString();
         //"eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiIxMDMwIiwidW5pcXVlX25hbWUiOiJBaHNhbiBadWJhaXIiLCJJRCI6IjEwMzAiLCJuYmYiOjE2MjczNzk0OTUsImV4cCI6MTYyNzgxMTQ5NSwiaWF0IjoxNjI3Mzc5NDk1fQ.ebFzQs9EdoVJV3WdkdbC00GQg4kBghZOeyAOLUyw8SrQjZSu7pD1evy-k2VOKCMcoU5B6klZnY5HdP1fPaRPsw";
     final url=Constants.baseurl + 'api/Profile/SaveProfile';
     final response=await https.post(Uri.parse(url),
@@ -330,7 +337,7 @@ class _BottomSheatState extends State<BottomSheat> {
     );
     Navigator.pop(context);
     if(response.statusCode==200){
-      patchimage();
+      updateimage();
       Navigator.push(context, MaterialPageRoute(builder: (context)=>Settings()));
 
       print("yes");
@@ -344,25 +351,13 @@ class _BottomSheatState extends State<BottomSheat> {
 
 
   }
-  uploaded()async{
-    final url=Constants.baseurl + 'api/Profile/UploadImage';
-    var postUri = Uri.parse(url);
-    var request = new https.MultipartRequest("POST", postUri,);
 
-    request.headers["Authorization"]="Bearer ${widget.header}";
-    request.files.add(new https.MultipartFile.fromBytes('file', _image.readAsBytesSync(),));
-
-    request.send().then((response) {
-      print(response);
-      if (response.statusCode == 200) print("Uploaded!");
-    });
-  }
   patchimage()async{
     final url=Constants.baseurl + 'api/Profile/UploadImage';
     var request=https.MultipartRequest("POST",Uri.parse(url));
     Uint8List data=await _image.readAsBytes();
     List<int> list=data.cast();
-    request.files.add(await https.MultipartFile.fromBytes("Image", list,filename: "Image..png"));
+    request.files.add(await https.MultipartFile.fromBytes("Image", list,filename: "Image.png"));
     request.headers.addAll(
       {
         "Content-type":"multipart/form-data",
@@ -378,6 +373,29 @@ class _BottomSheatState extends State<BottomSheat> {
    })));
 
 
+  }
+  Future updateimage() async {
+  //  LoadingDialog().showLoaderDialog(context , text: "Updating Image");
+
+
+    Dio dio = new Dio();
+    dio.options.headers = {
+      'Authorization': "Bearer " + widget.header.toString(),
+    };
+
+    var formdata = FormData.fromMap({
+      "Image": await MultipartFile.fromFile(_image.path,filename: '${DateTime.now().millisecondsSinceEpoch} .jpg'),
+    });
+    await dio.post(
+      // "https://httpbin.org/post"
+        Constants.baseurl + 'api/Profile/UploadImage'
+        , data: formdata).then((value){
+      if(value.statusCode == 200){
+        Navigator.of(context).pop();
+
+      }
+      // print(value),
+    });
   }
 
 

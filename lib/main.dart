@@ -1,6 +1,7 @@
 import 'package:country_code_picker/country_localizations.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trade_watch/Screens/Auth/Login.dart';
 import 'package:trade_watch/Screens/Dashboard/Dashboard.dart';
@@ -10,6 +11,11 @@ import 'Extras/CustomColors.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.blueAccent,
+    ),
+  );
 
   runApp(MyApp());
 }

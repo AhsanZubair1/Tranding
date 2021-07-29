@@ -2,7 +2,9 @@ import 'package:chewie/chewie.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:trade_watch/Extras/CustomColors.dart';
+import 'package:trade_watch/Widgets/Youtubeplayervideo.dart';
 import 'package:video_player/video_player.dart';
+import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 class VideoWidget extends StatefulWidget {
   @override
   _VideoWidgetState createState() => _VideoWidgetState();
@@ -12,19 +14,41 @@ class _VideoWidgetState extends State<VideoWidget> {
    VideoPlayerController? controller;
   ChewieController ?chewieController;
   bool check=false;
-   Future<void> initializeVideoPlayerFuture()async{
-     controller= VideoPlayerController.network("https://www.youtube.com/watch?v=9xwazD5SyVg");
+  //  Future<void> initializeVideoPlayerFuture()async{
+  //    controller= VideoPlayerController.network("https://www.youtube.com/watch?v=9xwazD5SyVg");
+  //
+  //    await Future.wait([controller!.initialize()]);
+  //    chewieController=ChewieController(
+  //        videoPlayerController: controller!,
+  //        autoPlay: true,looping: true,
+  //    materialProgressColors: ChewieProgressColors(playedColor: Colors.red,
+  //        handleColor: Colors.cyanAccent,backgroundColor: Colors.yellow,bufferedColor: Colors.greenAccent),
+  //    placeholder: Container(color: Colors.greenAccent,),
+  //      autoInitialize: true,
+  //    );
+  // }
+  // https://www.youtube.com/watch?v=g1GJlyWjdY8
+   YoutubePlayerController _controller = YoutubePlayerController(
+     initialVideoId: 'g1GJlyWjdY8',
+     flags: YoutubePlayerFlags(
+       autoPlay: true,
+       mute: true,
+     ),
+   );
 
-     await Future.wait([controller!.initialize()]);
-     chewieController=ChewieController(
-         videoPlayerController: controller!,
-         autoPlay: true,looping: true,
-     materialProgressColors: ChewieProgressColors(playedColor: Colors.red,
-         handleColor: Colors.cyanAccent,backgroundColor: Colors.yellow,bufferedColor: Colors.greenAccent),
-     placeholder: Container(color: Colors.greenAccent,),
-       autoInitialize: true,
-     );
-  }
+
+   // YoutubePlayer(
+   // controller:_controller,
+   // showVideoProgressIndicator: true,
+   // videoProgressIndicatorColor: Colors.amber,
+   // progressColors: ProgressColors(
+   // playedColor: Colors.amber,
+   // handleColor: Colors.amberAccent,
+   // ),
+   // onReady () {
+   //   _controller.addListener(listener);
+   // },
+   // ),
 void initState(){
   super.initState();
   //
@@ -79,9 +103,10 @@ dispose(){
 
                         setState(() {
                           check=true;
+                          Navigator.push(context, MaterialPageRoute(builder: (ctx)=>Playvideo()));
 
                         });
-                      },child: check==false?Image(image: AssetImage('assets/images/play.png'),width: 45,):videoplaye()),
+                      },child:Image(image: AssetImage('assets/images/play.png'),width: 45,)),
                       SizedBox(width: width * 0.03,),
                       Expanded(
                         child: Text('Lorem ipsum dolor sit amet, consectetur adipiscing elit',
@@ -208,31 +233,31 @@ dispose(){
   }
   //for mute
 
-  Widget videoplaye() {
-   return Container(
-      height: 300,
-      width: 250,
-      child:
-      FutureBuilder(
-        future: initializeVideoPlayerFuture(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.done) {
-            // If the VideoPlayerController has finished initialization, use
-            // the data it provides to limit the aspect ratio of the video.
-            return chewieController != null ?
-            Chewie(controller: chewieController!) :Container(height: 0,width: 0,);
-            check = true;
-          } else {
-            check=true;
-            return const Center(
-              child: CircularProgressIndicator(color: Colors.white,),
-
-            );
-          }
-        },
-      ),
-
-    );
-  }
+  // Widget videoplaye() {
+  //  return Container(
+  //     height: 300,
+  //     width: 250,
+  //     child:
+  //     FutureBuilder(
+  //       future: initializeVideoPlayerFuture(),
+  //       builder: (context, snapshot) {
+  //         if (snapshot.connectionState == ConnectionState.done) {
+  //           // If the VideoPlayerController has finished initialization, use
+  //           // the data it provides to limit the aspect ratio of the video.
+  //           return chewieController != null ?
+  //           Chewie(controller: chewieController!) :Container(height: 0,width: 0,);
+  //           check = true;
+  //         } else {
+  //           check=true;
+  //           return const Center(
+  //             child: CircularProgressIndicator(color: Colors.white,),
+  //
+  //           );
+  //         }
+  //       },
+  //     ),
+  //
+  //   );
+  // }
 }
 
