@@ -1,0 +1,215 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:jwt_decoder/jwt_decoder.dart';
+import 'package:provider/provider.dart';
+import 'package:share/share.dart';
+import 'package:trade_watch/Extras/CustomColors.dart';
+import 'package:trade_watch/Model/NewsModel.dart';
+import 'package:trade_watch/Screens/others/NewsDetail.dart';
+
+class TopNewsWidget extends StatelessWidget {
+
+  NewsModel model;
+
+  TopNewsWidget(this.model);
+
+  late double height , width;
+
+  late DocumentReference firebaseFirestore;
+  late String id;
+  late String date;
+
+  @override
+  Widget build(BuildContext context) {
+
+
+    // String token = Provider.of<String>(context);
+    // Map<String, dynamic> decodedToken = JwtDecoder.decode(token);
+    id = "1";//decodedToken["ID"];
+
+    try{
+      date = DateFormat('MMM dd,yyyy').format(DateFormat('EEE, dd MMM yyyy hh:mm:ss').parse(
+          model.date
+      ));
+    }catch(e){
+      date = DateFormat('MMM dd,yyyy').format(DateFormat('MM/dd/yyyy hh:mm:ss').parse(
+          model.date
+      ));
+    }
+    firebaseFirestore = FirebaseFirestore.instance.collection('NewsLikes')
+        .doc(model.newsUrl.replaceAll("/", "")).collection('likes').doc(id);
+    height = MediaQuery.of(context).size.height;
+    width = MediaQuery.of(context).size.width;
+
+
+    int words = (model.title ?? "").split(" ").length + (model.text ?? "").split(" ").length;
+    int min = (words ~/ 200) + 1;
+
+    return GestureDetector(
+      onTap: (){
+        Navigator.of(context).push(MaterialPageRoute(builder: (ctx){
+          return NewsDetail(model,);
+        }));
+      },
+      child: Container(
+        width: width,
+        alignment: Alignment.bottomCenter,
+        padding: EdgeInsets.symmetric(horizontal: width * 0.05),
+        child: Card(
+          shadowColor: Colors.grey.shade200,
+          elevation: height * 0.01,
+          margin: EdgeInsets.symmetric(vertical: height * 0.02,),
+
+          // shape: RoundedRectangleBorder(
+          //   borderRadius: BorderRadius.circular(0)
+          // ),
+          child: Column(
+            children: [
+              Expanded(
+                  child: Stack(
+                    children: [
+                      Container(
+                        width: double.infinity,
+                        height: double.infinity,
+                        child: Image(
+                            image: NetworkImage(model.imageUrl!),
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+
+                      Positioned(
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        child: Container(
+                          color: Colors.black54,
+                          padding: EdgeInsets.only(left: width * 0.03,right: width * 0.03,top: width * 0.01, bottom: width * 0.01),
+                          child: Text(model.title == null ? "" : model.title!,
+                            maxLines: 2,
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                                fontFamily: 'pm'
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+              ),
+              SizedBox(height: height * 0.01,),
+              Container(
+                margin: EdgeInsets.only(left: width * 0.03,right: width * 0.03,bottom: width * 0.03),
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 6,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(model.sourceName != null ? model.sourceName! : "",
+                            style: TextStyle(
+                              color: CColors.yellowd,
+                              fontFamily: 'pm',
+                              fontSize: 12
+                            ),
+                          ),
+                          SizedBox(height: height * 0.0025,),
+                          Row(
+                            children: [
+                              Text(date,
+                                style: TextStyle(
+                                  color: CColors.graytext,
+                                  fontFamily: 'pm',
+                                  fontSize: 12
+                                ),
+                              ),
+                              SizedBox(width: width *0.01,),
+                              Icon(Icons.circle,color: CColors.graytext, size: 13,),
+                              SizedBox(width: width *0.01,),
+                              Text('$min m read',
+                                style: TextStyle(
+                                    color: CColors.graytext,
+                                    fontFamily: 'pm',
+                                    fontSize: 12
+                                ),
+                              ),
+
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    Expanded(
+                      flex: 4,
+                      child: StreamBuilder<DocumentSnapshot>(
+                          stream: firebaseFirestore.snapshots(),
+                          builder: (context, snapshot) {
+                            int like = 0;
+                            if(snapshot.hasData && snapshot.data!.exists){
+                              print(snapshot.data!.get("liked"));
+                              like = snapshot.data!.get("liked") as int;
+                            }
+
+                            print(like);
+                            return Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              children: [
+                                InkWell(
+                                  onTap: (){
+                                    if(like == 1){
+                                      firebaseFirestore.set({"liked" : 0});
+                                    }else{
+                                      firebaseFirestore.set({"liked" : 1});
+                                    }
+                                  },
+                                  child: Image(
+                                    image: AssetImage(like == 1 ? 'assets/icons/nlike.png' : 'assets/icons/like.png'),
+                                    width: 20,
+                                    height: 20,
+                                  ),
+                                ),
+
+                                InkWell(
+                                  onTap: (){
+                                    Share.share(model.newsUrl);
+                                  },
+                                  child: Image(
+                                    image: AssetImage('assets/icons/share.png'),
+                                    width: 20,
+                                    height: 20,
+                                  ),
+                                ),
+
+                                InkWell(
+                                  onTap: (){
+                                    if(like == 2){
+                                      firebaseFirestore.set({"liked" : 0});
+                                    }else{
+                                      firebaseFirestore.set({"liked" : 2});
+                                    }
+                                  },
+                                  child: Image(
+                                    image: AssetImage(like == 2 ? 'assets/icons/ndislike.png' :'assets/icons/dislike.png'),
+                                    width: 20,
+                                    height: 20,
+                                  ),
+                                ),
+                              ],
+                            );
+                          }
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
